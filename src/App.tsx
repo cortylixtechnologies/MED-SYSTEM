@@ -13,6 +13,7 @@ import SentReferrals from "./pages/SentReferrals";
 import IncomingReferrals from "./pages/IncomingReferrals";
 import ReferralDetail from "./pages/ReferralDetail";
 import CodeLookup from "./pages/CodeLookup";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <CodeLookup />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

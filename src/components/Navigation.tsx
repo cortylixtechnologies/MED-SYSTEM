@@ -26,7 +26,9 @@ const Navigation = () => {
     navigate('/login');
   };
 
-  const navItems = [
+  const isAdmin = currentUser?.role === 'admin';
+
+  const doctorNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Activity },
     { path: '/create-referral', label: 'New Referral', icon: Send },
     { path: '/sent-referrals', label: 'Sent Referrals', icon: FileText },
@@ -34,14 +36,22 @@ const Navigation = () => {
     { path: '/code-lookup', label: 'Code Lookup', icon: Search },
   ];
 
+  const adminNavItems = [
+    { path: '/admin', label: 'Admin Dashboard', icon: Activity },
+    { path: '/code-lookup', label: 'Code Lookup', icon: Search },
+  ];
+
+  const navItems = isAdmin ? adminNavItems : doctorNavItems;
+
   const isActive = (path: string) => location.pathname === path;
+  const defaultPath = isAdmin ? '/admin' : '/dashboard';
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center gap-2">
+            <Link to={defaultPath} className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-primary-foreground" />
               </div>
