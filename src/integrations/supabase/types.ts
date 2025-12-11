@@ -14,16 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      hospitals: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          hospital_id: string | null
+          id: string
+          specialty: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          hospital_id?: string | null
+          id: string
+          specialty?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          hospital_id?: string | null
+          id?: string
+          specialty?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          performed_by: string | null
+          referral_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          performed_by?: string | null
+          referral_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          performed_by?: string | null
+          referral_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_activity_logs_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          assigned_doctor_id: string | null
+          created_at: string
+          created_by: string
+          from_hospital_id: string
+          id: string
+          medical_summary: string
+          patient_age: number
+          patient_code: string | null
+          patient_contact: string | null
+          patient_medical_id: string | null
+          patient_name: string
+          reason: string
+          rejection_reason: string | null
+          status: Database["public"]["Enums"]["referral_status"]
+          to_hospital_id: string
+          updated_at: string
+          urgency: Database["public"]["Enums"]["urgency_level"]
+        }
+        Insert: {
+          assigned_doctor_id?: string | null
+          created_at?: string
+          created_by: string
+          from_hospital_id: string
+          id?: string
+          medical_summary: string
+          patient_age: number
+          patient_code?: string | null
+          patient_contact?: string | null
+          patient_medical_id?: string | null
+          patient_name: string
+          reason: string
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+          to_hospital_id: string
+          updated_at?: string
+          urgency?: Database["public"]["Enums"]["urgency_level"]
+        }
+        Update: {
+          assigned_doctor_id?: string | null
+          created_at?: string
+          created_by?: string
+          from_hospital_id?: string
+          id?: string
+          medical_summary?: string
+          patient_age?: number
+          patient_code?: string | null
+          patient_contact?: string | null
+          patient_medical_id?: string | null
+          patient_name?: string
+          reason?: string
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+          to_hospital_id?: string
+          updated_at?: string
+          urgency?: Database["public"]["Enums"]["urgency_level"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_from_hospital_id_fkey"
+            columns: ["from_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_to_hospital_id_fkey"
+            columns: ["to_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_patient_code: { Args: never; Returns: string }
+      get_user_hospital: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "doctor"
+      referral_status:
+        | "pending"
+        | "accepted"
+        | "in_treatment"
+        | "completed"
+        | "rejected"
+        | "more_info_requested"
+      urgency_level: "emergency" | "urgent" | "routine"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +355,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "doctor"],
+      referral_status: [
+        "pending",
+        "accepted",
+        "in_treatment",
+        "completed",
+        "rejected",
+        "more_info_requested",
+      ],
+      urgency_level: ["emergency", "urgent", "routine"],
+    },
   },
 } as const
