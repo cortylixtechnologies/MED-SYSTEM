@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ReferralProvider } from "@/contexts/ReferralContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -21,75 +20,73 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ReferralProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/create-referral"
-                element={
-                  <ProtectedRoute>
-                    <CreateReferral />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/sent-referrals"
-                element={
-                  <ProtectedRoute>
-                    <SentReferrals />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/incoming-referrals"
-                element={
-                  <ProtectedRoute>
-                    <IncomingReferrals />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/referral/:id"
-                element={
-                  <ProtectedRoute>
-                    <ReferralDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/code-lookup"
-                element={
-                  <ProtectedRoute>
-                    <CodeLookup />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ReferralProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-referral"
+              element={
+                <ProtectedRoute>
+                  <CreateReferral />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sent-referrals"
+              element={
+                <ProtectedRoute>
+                  <SentReferrals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/incoming-referrals"
+              element={
+                <ProtectedRoute>
+                  <IncomingReferrals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/referral/:id"
+              element={
+                <ProtectedRoute>
+                  <ReferralDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/code-lookup"
+              element={
+                <ProtectedRoute>
+                  <CodeLookup />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
