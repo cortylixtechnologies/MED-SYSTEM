@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const Navigation = () => {
   const { currentUser, logout } = useAuth();
@@ -79,6 +80,7 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <NotificationCenter />
             {currentUser && (
               <div className="text-right">
                 <p className="text-sm font-medium text-foreground">{currentUser.full_name}</p>
