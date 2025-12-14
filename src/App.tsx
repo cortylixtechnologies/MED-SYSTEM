@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { NotificationProvider } from "@/components/NotificationProvider";
+import { NotificationContextProvider } from "@/contexts/NotificationContext";
+import EmergencyAlertOverlay from "@/components/EmergencyAlertOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -21,10 +22,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <NotificationProvider>
+      <NotificationContextProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <EmergencyAlertOverlay />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -89,7 +91,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
         </TooltipProvider>
-      </NotificationProvider>
+      </NotificationContextProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
