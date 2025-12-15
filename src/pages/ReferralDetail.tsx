@@ -2,26 +2,32 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReferrals } from '@/hooks/useReferrals';
+import { useReferralAttachments } from '@/hooks/useReferralAttachments';
+import { useReferralMessages } from '@/hooks/useReferralMessages';
 import Navigation from '@/components/Navigation';
 import { StatusBadge, UrgencyBadge } from '@/components/StatusBadge';
 import ActivityTimeline from '@/components/ActivityTimeline';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import { AttachmentsList } from '@/components/AttachmentsList';
+import { ReferralChat } from '@/components/ReferralChat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
   Building2, 
-  User, 
   Phone, 
-  Calendar, 
   FileText,
   CheckCircle,
   XCircle,
   MessageSquare,
   Copy,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Paperclip,
+  MessageCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -31,6 +37,8 @@ const ReferralDetail = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { getReferralById, updateReferralStatus, loading } = useReferrals();
+  const { attachments, loading: attachmentsLoading, uploading, uploadFile, deleteAttachment, getDownloadUrl } = useReferralAttachments(id);
+  const { messages, loading: messagesLoading, sending, sendMessage } = useReferralMessages(id);
   
   const [actionReason, setActionReason] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -122,6 +130,19 @@ const ReferralDetail = () => {
     setIsUpdating(false);
   };
 
+  const handleFilesSelected = async (files: File[]) => {
+    for (const file of files) {
+      await uploadFile(file);
+    }
+  };
+
+  const handleDownload = async (attachment: any) => {
+    const url = await getDownloadUrl(attachment);
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -209,6 +230,50 @@ const ReferralDetail = () => {
                   </div>
                 )}
               </CardContent>
+            </Card>
+
+            {/* Attachments & Messages Tabs */}
+            <Card className="card-elevated">
+              <Tabs defaultValue="attachments" className="w-full">
+                <CardHeader className="pb-0">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="attachments" className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4" />
+                      Attachments ({attachments.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="messages" className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      Messages ({messages.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <TabsContent value="attachments" className="mt-0 space-y-4">
+                    <FileUploadZone
+                      onFilesSelected={handleFilesSelected}
+                      uploading={uploading}
+                      maxFiles={5}
+                    />
+                    <AttachmentsList
+                      attachments={attachments}
+                      loading={attachmentsLoading}
+                      onDownload={handleDownload}
+                      onDelete={deleteAttachment}
+                      canDelete={true}
+                      currentUserId={currentUser.id}
+                    />
+                  </TabsContent>
+                  <TabsContent value="messages" className="mt-0">
+                    <ReferralChat
+                      messages={messages}
+                      loading={messagesLoading}
+                      sending={sending}
+                      currentUserId={currentUser.id}
+                      onSendMessage={sendMessage}
+                    />
+                  </TabsContent>
+                </CardContent>
+              </Tabs>
             </Card>
 
             {/* Activity Log */}
