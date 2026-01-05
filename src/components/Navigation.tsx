@@ -20,6 +20,7 @@ import {
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import NotificationCenter from '@/components/NotificationCenter';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Navigation = () => {
   const { currentUser, logout } = useAuth();
@@ -57,36 +58,43 @@ const Navigation = () => {
   const defaultPath = isAdmin ? '/admin' : '/dashboard';
 
   return (
-    <nav className="bg-card border-b border-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to={defaultPath} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg text-foreground">MedRefer</span>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
-                  isActive(item.path)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-              >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden xl:inline">{item.label}</span>
+    <TooltipProvider delayDuration={100}>
+      <nav className="bg-card border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link to={defaultPath} className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="font-semibold text-lg text-foreground">MedRefer</span>
               </Link>
-            ))}
-          </div>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-0.5">
+              {navItems.map((item) => (
+                <Tooltip key={item.path}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={item.path}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap',
+                        isActive(item.path)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="hidden xl:inline">{item.label}</span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent className="xl:hidden">
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
 
           <div className="hidden lg:flex items-center gap-2">
             <NotificationCenter />
@@ -153,7 +161,8 @@ const Navigation = () => {
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+    </TooltipProvider>
   );
 };
 
