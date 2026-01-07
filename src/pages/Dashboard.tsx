@@ -40,8 +40,16 @@ const Dashboard = () => {
   const inTreatment = incomingReferrals.filter(r => r.status === 'in_treatment' || r.status === 'accepted');
   const completed = [...sentReferrals, ...incomingReferrals].filter(r => r.status === 'completed');
 
+  // Role-based theme colors
+  const themeColor = isAdmin ? 'accent' : 'primary';
+  const themeBg = isAdmin ? 'bg-accent' : 'bg-primary';
+  const themeBgLight = isAdmin ? 'bg-accent/10' : 'bg-primary/10';
+  const themeBgMedium = isAdmin ? 'bg-accent/20' : 'bg-primary/20';
+  const themeText = isAdmin ? 'text-accent' : 'text-primary';
+  const themeBorder = isAdmin ? 'border-accent/20' : 'border-primary/20';
+
   const stats = [
-    { label: isAdmin ? 'Total Referrals' : 'Sent Referrals', value: sentReferrals.length, icon: Send, color: 'text-primary' },
+    { label: isAdmin ? 'Total Referrals' : 'Sent Referrals', value: sentReferrals.length, icon: Send, color: themeText },
     { label: 'Pending Review', value: pendingIncoming.length, icon: Clock, color: 'text-warning' },
     { label: 'In Treatment', value: inTreatment.length, icon: Activity, color: 'text-info' },
     { label: 'Completed', value: completed.length, icon: CheckCircle, color: 'text-success' },
@@ -54,28 +62,28 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className={`min-h-screen ${isAdmin ? 'bg-gradient-to-br from-accent/5 via-background to-accent/10' : 'bg-gradient-to-br from-primary/5 via-background to-secondary/10'}`}>
         <Navigation />
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <Loader2 className={`w-8 h-8 animate-spin ${themeText}`} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen ${isAdmin ? 'bg-gradient-to-br from-accent/5 via-background to-accent/10' : 'bg-gradient-to-br from-primary/5 via-background to-secondary/10'}`}>
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className={`text-2xl font-bold ${isAdmin ? 'text-accent' : 'text-foreground'}`}>
               Welcome back, {currentUser.full_name.split(' ')[1] || currentUser.full_name}
             </h1>
             {isAdmin && (
-              <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+              <span className="bg-accent/15 text-accent text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 border border-accent/30">
                 <Shield className="w-3 h-3" />
                 Admin
               </span>
@@ -99,16 +107,16 @@ const Dashboard = () => {
         {/* Admin Quick Action */}
         {isAdmin && (
           <Link to="/admin" className="block mb-4">
-            <Card className="card-elevated hover:shadow-lg transition-all duration-200 cursor-pointer group border-primary/20 bg-primary/5">
+            <Card className={`card-elevated hover:shadow-lg transition-all duration-200 cursor-pointer group ${themeBorder} ${themeBgLight}`}>
               <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                  <Shield className="w-6 h-6 text-primary" />
+                <div className={`w-12 h-12 rounded-xl ${themeBgMedium} flex items-center justify-center group-hover:bg-accent/30 transition-colors`}>
+                  <Shield className={`w-6 h-6 ${themeText}`} />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">Admin Dashboard</h3>
                   <p className="text-sm text-muted-foreground">Manage hospitals, doctors, and view all referrals</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ArrowRight className={`w-5 h-5 text-muted-foreground group-hover:${themeText} transition-colors`} />
               </CardContent>
             </Card>
           </Link>
@@ -118,16 +126,16 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           {hasHospital && (
             <Link to="/create-referral">
-              <Card className="card-elevated hover:shadow-lg transition-all duration-200 cursor-pointer group">
+              <Card className={`card-elevated hover:shadow-lg transition-all duration-200 cursor-pointer group ${isAdmin ? 'hover:border-accent/30' : 'hover:border-primary/30'}`}>
                 <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <Send className="w-6 h-6 text-primary" />
+                  <div className={`w-12 h-12 rounded-xl ${themeBgLight} flex items-center justify-center group-hover:${themeBgMedium} transition-colors`}>
+                    <Send className={`w-6 h-6 ${themeText}`} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground">Create New Referral</h3>
                     <p className="text-sm text-muted-foreground">Send a patient to another hospital</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <ArrowRight className={`w-5 h-5 text-muted-foreground group-hover:${themeText} transition-colors`} />
                 </CardContent>
               </Card>
             </Link>
