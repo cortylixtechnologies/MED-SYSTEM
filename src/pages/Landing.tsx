@@ -12,6 +12,7 @@ import {
   Users,
   Zap
 } from "lucide-react";
+import AmbulanceLoader from "@/components/AmbulanceLoader";
 
 const Landing = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -19,30 +20,12 @@ const Landing = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/20 flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="relative mb-8">
-            <div className="w-24 h-24 rounded-full bg-primary/20 animate-pulse mx-auto flex items-center justify-center">
-              <Activity className="w-12 h-12 text-primary animate-pulse" />
-            </div>
-            <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">MedRefer</h1>
-          <p className="text-muted-foreground">Hospital Referral Management System</p>
-          <div className="mt-6 flex justify-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
-          </div>
-        </div>
-      </div>
-    );
+    return <AmbulanceLoader />;
   }
 
   const features = [
