@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationContextProvider } from "@/contexts/NotificationContext";
 import EmergencyAlertOverlay from "@/components/EmergencyAlertOverlay";
+import AIChatWidget from "@/components/AIChatWidget";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -35,6 +36,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <EmergencyAlertOverlay />
+            <AIChatWidget />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
