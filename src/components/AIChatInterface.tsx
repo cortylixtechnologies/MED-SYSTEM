@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/hooks/useAIChat';
 import { useVoice } from '@/hooks/useVoice';
-
+import AudioWaveform from '@/components/AudioWaveform';
 interface AIChatInterfaceProps {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -115,12 +115,23 @@ const AIChatInterface = ({
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <Bot className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center relative">
+            {isSpeaking ? (
+              <AudioWaveform isActive={true} barCount={3} className="h-4" />
+            ) : (
+              <Bot className="w-4 h-4 text-primary-foreground" />
+            )}
           </div>
-          <div>
-            <p className="text-sm font-medium">MedRefer Assistant</p>
-            <p className="text-xs text-muted-foreground">AI-powered help</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <p className="text-sm font-medium">MedRefer Assistant</p>
+              <p className="text-xs text-muted-foreground">
+                {isSpeaking ? 'Speaking...' : 'AI-powered help'}
+              </p>
+            </div>
+            {isSpeaking && (
+              <AudioWaveform isActive={true} barCount={5} className="h-5 ml-1" />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">
