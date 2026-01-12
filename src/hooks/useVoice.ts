@@ -11,8 +11,10 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const recognitionRef = useRef<any>(null);
   const onTranscriptRef = useRef(onTranscript);
+  const speakingCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keep callback ref updated
   useEffect(() => {
@@ -46,7 +48,48 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
     // Check for speech synthesis support
     const hasSynthesis = 'speechSynthesis' in window;
     setIsSupported(!!(SpeechRecognition || hasSynthesis));
-    setIsReady(true);
+
+    // Handle Chrome's async voice loading
+    if (hasSynthesis) {
+      const checkVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          setVoicesLoaded(true);
+          setIsReady(true);
+        }
+      };
+
+      // Check immediately (works in Firefox/Safari)
+      checkVoices();
+
+      // Listen for voiceschanged event (required for Chrome)
+      window.speechSynthesis.onvoiceschanged = () => {
+        checkVoices();
+      };
+
+      // Fallback timeout - some browsers may not fire voiceschanged
+      const fallbackTimer = setTimeout(() => {
+        if (!voicesLoaded) {
+          setVoicesLoaded(true);
+          setIsReady(true);
+        }
+      }, 1000);
+
+      return () => {
+        clearTimeout(fallbackTimer);
+        if (recognitionRef.current) {
+          recognitionRef.current.abort();
+        }
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        if (speakingCheckIntervalRef.current) {
+          clearInterval(speakingCheckIntervalRef.current);
+        }
+      };
+    } else {
+      setIsReady(true);
+    }
 
     return () => {
       if (recognitionRef.current) {
@@ -54,6 +97,9 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
       }
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+      }
+      if (speakingCheckIntervalRef.current) {
+        clearInterval(speakingCheckIntervalRef.current);
       }
     };
   }, [language]);
@@ -85,20 +131,52 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
+    
+    // Clear any existing interval
+    if (speakingCheckIntervalRef.current) {
+      clearInterval(speakingCheckIntervalRef.current);
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language;
     utterance.rate = 1;
     utterance.pitch = 1;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = (e) => {
-      console.error('Speech error:', e);
-      setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      // Chrome workaround: poll speaking state since onend sometimes doesn't fire
+      speakingCheckIntervalRef.current = setInterval(() => {
+        if (!window.speechSynthesis.speaking) {
+          setIsSpeaking(false);
+          if (speakingCheckIntervalRef.current) {
+            clearInterval(speakingCheckIntervalRef.current);
+            speakingCheckIntervalRef.current = null;
+          }
+        }
+      }, 100);
     };
 
-    // Chrome requires voices to be loaded first
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      if (speakingCheckIntervalRef.current) {
+        clearInterval(speakingCheckIntervalRef.current);
+        speakingCheckIntervalRef.current = null;
+      }
+    };
+
+    utterance.onerror = (e) => {
+      // Ignore 'interrupted' errors as they're expected when cancelling
+      if (e.error !== 'interrupted') {
+        console.error('Speech error:', e);
+      }
+      setIsSpeaking(false);
+      if (speakingCheckIntervalRef.current) {
+        clearInterval(speakingCheckIntervalRef.current);
+        speakingCheckIntervalRef.current = null;
+      }
+    };
+
+    // Get and set voice
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
       const englishVoice = voices.find(v => v.lang.startsWith('en'));
@@ -114,6 +192,10 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
+      if (speakingCheckIntervalRef.current) {
+        clearInterval(speakingCheckIntervalRef.current);
+        speakingCheckIntervalRef.current = null;
+      }
     }
   }, []);
 
@@ -122,6 +204,7 @@ export const useVoice = (options: UseVoiceOptions = {}) => {
     isSpeaking,
     isSupported,
     isReady,
+    voicesLoaded,
     startListening,
     stopListening,
     speak,
