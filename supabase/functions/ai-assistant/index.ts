@@ -11,10 +11,53 @@ interface ChatMessage {
   content: string;
 }
 
+// Simple in-memory rate limiting (per IP, resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 20; // 20 requests per minute for unauthenticated
+const MAX_REQUESTS_AUTHENTICATED = 60; // 60 requests per minute for authenticated
+
+function checkRateLimit(clientIp: string, isAuthenticated: boolean): boolean {
+  const now = Date.now();
+  const limit = isAuthenticated ? MAX_REQUESTS_AUTHENTICATED : MAX_REQUESTS_PER_WINDOW;
+  
+  const existing = rateLimitMap.get(clientIp);
+  
+  if (!existing || now > existing.resetTime) {
+    rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (existing.count >= limit) {
+    return false;
+  }
+  
+  existing.count++;
+  return true;
+}
+
+// Clean up old rate limit entries periodically
+function cleanupRateLimits() {
+  const now = Date.now();
+  for (const [ip, data] of rateLimitMap.entries()) {
+    if (now > data.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Clean up old rate limit entries
+  cleanupRateLimits();
+
+  // Get client IP for rate limiting
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                   req.headers.get("x-real-ip") || 
+                   "unknown";
 
   try {
     const { messages, patientCode, mode } = await req.json();
@@ -30,9 +73,29 @@ serve(async (req) => {
 
     let contextData = "";
     let systemPrompt = "";
+    let isAuthenticated = false;
 
     // Patient mode - lookup referral by code
     if (mode === "patient" && patientCode) {
+      // Check rate limit for unauthenticated requests
+      if (!checkRateLimit(clientIp, false)) {
+        console.warn(`Rate limit exceeded for IP: ${clientIp} in patient mode`);
+        return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Validate patient code format (REF-XXXX-XXXX)
+      const patientCodeRegex = /^REF-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+      if (!patientCodeRegex.test(patientCode)) {
+        console.warn(`Invalid patient code format attempted: ${patientCode.substring(0, 20)} from IP: ${clientIp}`);
+        return new Response(JSON.stringify({ error: "Invalid referral code format" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: referral, error } = await supabase
         .from("referrals")
         .select(`
@@ -44,6 +107,8 @@ serve(async (req) => {
         .single();
 
       if (error || !referral) {
+        // Log failed lookup attempts for security monitoring
+        console.warn(`Failed patient code lookup: ${patientCode} from IP: ${clientIp}`);
         contextData = "No referral found with that code.";
       } else {
         const fromHospital = referral.from_hospital as unknown as { name: string } | null;
@@ -83,11 +148,24 @@ Respond helpfully to the patient's questions.`;
       }
 
       const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      const { data, error: claimsError } = await supabase.auth.getClaims(token);
 
-      if (authError || !user) {
+      if (claimsError || !data?.claims) {
+        console.warn(`Invalid token attempt from IP: ${clientIp}`);
         return new Response(JSON.stringify({ error: "Invalid token" }), {
           status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      isAuthenticated = true;
+      const userId = data.claims.sub;
+
+      // Check rate limit for authenticated requests (higher limit)
+      if (!checkRateLimit(clientIp, true)) {
+        console.warn(`Rate limit exceeded for authenticated user: ${userId}`);
+        return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+          status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -96,7 +174,7 @@ Respond helpfully to the patient's questions.`;
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, hospital_id, specialty")
-        .eq("id", user.id)
+        .eq("id", userId)
         .single();
 
       // Get doctor's recent referrals
@@ -107,7 +185,7 @@ Respond helpfully to the patient's questions.`;
           from_hospital:hospitals!referrals_from_hospital_id_fkey(name),
           to_hospital:hospitals!referrals_to_hospital_id_fkey(name)
         `)
-        .or(`created_by.eq.${user.id},assigned_doctor_id.eq.${user.id}`)
+        .or(`created_by.eq.${userId},assigned_doctor_id.eq.${userId}`)
         .order("created_at", { ascending: false })
         .limit(10);
 
@@ -157,6 +235,15 @@ Respond helpfully to the doctor's questions.`;
     }
     // General assistant mode (for unauthenticated patient queries without code)
     else {
+      // Check rate limit for unauthenticated requests
+      if (!checkRateLimit(clientIp, false)) {
+        console.warn(`Rate limit exceeded for IP: ${clientIp} in general mode`);
+        return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       systemPrompt = `You are a helpful assistant for MedRefer, a medical referral system. You can help with:
 - Explaining how the referral process works
 - Answering general questions about medical referrals
