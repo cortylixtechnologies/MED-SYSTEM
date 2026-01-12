@@ -12,15 +12,23 @@ export interface UserProfile {
   role: 'doctor' | 'admin';
 }
 
+export interface MFAChallenge {
+  factorId: string;
+  onVerified: () => void;
+  onCancel: () => void;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   currentUser: UserProfile | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  login: (email: string, password: string) => Promise<{ error: string | null; mfaRequired?: boolean; factorId?: string }>;
   signup: (email: string, password: string, fullName: string, hospitalId?: string, specialty?: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  mfaChallenge: MFAChallenge | null;
+  setMfaChallenge: (challenge: MFAChallenge | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mfaChallenge, setMfaChallenge] = useState<MFAChallenge | null>(null);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -114,11 +123,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ error: string | null }> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const login = async (email: string, password: string): Promise<{ error: string | null; mfaRequired?: boolean; factorId?: string }> => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return { error: error.message };
     }
+
+    // Check if MFA is required
+    if (data.session) {
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      
+      if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
+        // MFA is required - get the factor
+        const { data: factorsData } = await supabase.auth.mfa.listFactors();
+        const verifiedFactor = factorsData?.totp?.find(f => f.status === 'verified');
+        
+        if (verifiedFactor) {
+          return { error: null, mfaRequired: true, factorId: verifiedFactor.id };
+        }
+      }
+    }
+
     return { error: null };
   };
 
@@ -176,7 +201,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       login, 
       signup,
       logout, 
-      isAuthenticated: !!user 
+      isAuthenticated: !!user,
+      mfaChallenge,
+      setMfaChallenge,
     }}>
       {children}
     </AuthContext.Provider>

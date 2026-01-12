@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Loader2, Save, User } from 'lucide-react';
+import { Loader2, Save, User, Shield, ShieldCheck, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { TwoFactorSetup, TwoFactorDisable } from '@/components/TwoFactorSetup';
+import { useMFA } from '@/hooks/useMFA';
 
 const SPECIALTIES = [
   'Cardiology',
@@ -62,6 +64,9 @@ const ProfileSettings = () => {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showMfaSetup, setShowMfaSetup] = useState(false);
+  const [showMfaDisable, setShowMfaDisable] = useState(false);
+  const { isEnabled: mfaEnabled, factors, loading: mfaLoading, refresh: refreshMfa } = useMFA();
   const [profile, setProfile] = useState<ProfileData>({
     full_name: '',
     email: '',
@@ -320,6 +325,57 @@ const ProfileSettings = () => {
             </CardContent>
           </Card>
 
+          {/* Security - Two-Factor Authentication */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Security
+              </CardTitle>
+              <CardDescription>Manage your account security settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {mfaEnabled ? (
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <ShieldOff className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium text-foreground">Two-Factor Authentication</p>
+                    <p className="text-sm text-muted-foreground">
+                      {mfaEnabled
+                        ? 'Your account is protected with 2FA'
+                        : 'Add an extra layer of security to your account'}
+                    </p>
+                  </div>
+                </div>
+                {mfaLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : mfaEnabled ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowMfaDisable(true)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <ShieldOff className="w-4 h-4 mr-2" />
+                    Disable
+                  </Button>
+                ) : (
+                  <Button onClick={() => setShowMfaSetup(true)}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    Enable 2FA
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Save Button */}
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving} size="lg">
@@ -332,6 +388,23 @@ const ProfileSettings = () => {
             </Button>
           </div>
         </div>
+
+        {/* 2FA Setup Dialog */}
+        <TwoFactorSetup
+          open={showMfaSetup}
+          onOpenChange={setShowMfaSetup}
+          onComplete={refreshMfa}
+        />
+
+        {/* 2FA Disable Dialog */}
+        {factors[0] && (
+          <TwoFactorDisable
+            open={showMfaDisable}
+            onOpenChange={setShowMfaDisable}
+            factorId={factors[0].id}
+            onDisabled={refreshMfa}
+          />
+        )}
       </main>
     </div>
   );

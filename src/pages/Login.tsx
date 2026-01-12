@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building2, Lock, Mail, User, AlertCircle, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
+import { TwoFactorVerify } from '@/components/TwoFactorSetup';
 
 interface Hospital {
   id: string;
@@ -25,6 +26,8 @@ const Login = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const { login, signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -47,15 +50,33 @@ const Login = () => {
     setError('');
     setIsLoading(true);
 
-    const { error: loginError } = await login(email, password);
+    const result = await login(email, password);
     setIsLoading(false);
 
-    if (loginError) {
-      setError(loginError);
+    if (result.error) {
+      setError(result.error);
+    } else if (result.mfaRequired && result.factorId) {
+      // Show MFA verification dialog
+      setMfaFactorId(result.factorId);
+      setMfaRequired(true);
     } else {
       toast.success('Welcome back!');
       navigate('/dashboard');
     }
+  };
+
+  const handleMfaVerified = () => {
+    setMfaRequired(false);
+    setMfaFactorId(null);
+    toast.success('Welcome back!');
+    navigate('/dashboard');
+  };
+
+  const handleMfaCancel = async () => {
+    // Sign out since they cancelled MFA
+    await supabase.auth.signOut();
+    setMfaRequired(false);
+    setMfaFactorId(null);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -244,6 +265,16 @@ const Login = () => {
           Contact your administrator to get access credentials
         </p>
       </div>
+
+      {/* MFA Verification Dialog */}
+      {mfaFactorId && (
+        <TwoFactorVerify
+          open={mfaRequired}
+          factorId={mfaFactorId}
+          onVerified={handleMfaVerified}
+          onCancel={handleMfaCancel}
+        />
+      )}
     </div>
   );
 };
