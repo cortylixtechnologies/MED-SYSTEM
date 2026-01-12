@@ -20,7 +20,7 @@ const AIChatWidget = () => {
   const hasPlayedWelcomeRef = useRef(false);
   const { currentUser } = useAuth();
 
-  const { speak, isReady } = useVoice({});
+  const { speak, isReady, voicesLoaded } = useVoice({});
 
   // Patient chat without code
   const generalChat = useAIChat({ mode: 'general' });
@@ -33,15 +33,15 @@ const AIChatWidget = () => {
 
   // Play welcome message when chat opens for first time
   useEffect(() => {
-    if (isOpen && isReady && !hasPlayedWelcomeRef.current && speakResponses) {
+    if (isOpen && isReady && voicesLoaded && !hasPlayedWelcomeRef.current && speakResponses) {
       hasPlayedWelcomeRef.current = true;
-      // Small delay to ensure speech synthesis is ready
+      // Small delay to ensure speech synthesis is fully ready
       const timer = setTimeout(() => {
         speak(WELCOME_MESSAGE);
-      }, 800);
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, isReady, speakResponses, speak]);
+  }, [isOpen, isReady, voicesLoaded, speakResponses, speak]);
 
   const handleVerifyCode = () => {
     if (patientCode.trim()) {
