@@ -234,6 +234,16 @@ const AIChatInterface = ({
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-3 border-t border-border">
+        {/* Recording indicator */}
+        {isListening && (
+          <div className="flex items-center justify-center gap-2 mb-3 p-2 bg-destructive/10 rounded-lg border border-destructive/20">
+            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+            <AudioWaveform isActive={true} barCount={7} className="h-6" />
+            <span className="text-sm font-medium text-destructive">Recording...</span>
+            <AudioWaveform isActive={true} barCount={7} className="h-6" />
+            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+          </div>
+        )}
         <div className="flex gap-2">
           {isSupported && (
             <Button
