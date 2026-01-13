@@ -1,26 +1,19 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { MessageCircle, X, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAIChat } from '@/hooks/useAIChat';
-import { useVoice } from '@/hooks/useVoice';
 import AIChatInterface from '@/components/AIChatInterface';
 import { cn } from '@/lib/utils';
-
-const WELCOME_MESSAGE = "Welcome to our streamlined medical referral system, created by Dickson Emmanuel and Mohammed. How can we assist you today? We're here to help";
 
 const AIChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'patient' | 'doctor'>('patient');
   const [patientCode, setPatientCode] = useState('');
   const [isCodeVerified, setIsCodeVerified] = useState(false);
-  const [speakResponses, setSpeakResponses] = useState(true);
-  const hasPlayedWelcomeRef = useRef(false);
   const { currentUser } = useAuth();
-
-  const { speak, isReady, voicesLoaded } = useVoice({});
 
   // Patient chat without code
   const generalChat = useAIChat({ mode: 'general' });
@@ -30,18 +23,6 @@ const AIChatWidget = () => {
 
   // Doctor chat (authenticated)
   const doctorChat = useAIChat({ mode: 'doctor' });
-
-  // Play welcome message when chat opens for first time
-  useEffect(() => {
-    if (isOpen && isReady && voicesLoaded && !hasPlayedWelcomeRef.current && speakResponses) {
-      hasPlayedWelcomeRef.current = true;
-      // Small delay to ensure speech synthesis is fully ready
-      const timer = setTimeout(() => {
-        speak(WELCOME_MESSAGE);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, isReady, voicesLoaded, speakResponses, speak]);
 
   const handleVerifyCode = () => {
     if (patientCode.trim()) {
@@ -58,11 +39,6 @@ const AIChatWidget = () => {
   const handleOpen = () => {
     setIsOpen(true);
   };
-
-  const handleFirstOpen = useCallback(() => {
-    // This is called from AIChatInterface on mount
-    // Welcome is now handled via useEffect
-  }, []);
 
   const patientQuickActions = [
     { label: 'Check status', message: 'What is the current status of my referral?' },
@@ -122,9 +98,6 @@ const AIChatWidget = () => {
             onClear={doctorChat.clearMessages}
             placeholder="Ask about referrals, patients..."
             quickActions={doctorQuickActions}
-            onFirstOpen={handleFirstOpen}
-            speakResponses={speakResponses}
-            onSpeakResponsesChange={setSpeakResponses}
           />
         ) : (
           // Unauthenticated - show patient interface with tabs
@@ -165,17 +138,14 @@ const AIChatWidget = () => {
                       onClear={generalChat.clearMessages}
                       placeholder="Ask about referrals..."
                       quickActions={generalQuickActions}
-                      onFirstOpen={handleFirstOpen}
-                      speakResponses={speakResponses}
-                      onSpeakResponsesChange={setSpeakResponses}
                     />
                   </div>
                 </div>
               ) : (
                 // Code verified - show patient chat
                 <div className="flex flex-col h-full">
-                  <div className="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center justify-between">
-                    <span className="text-sm text-green-700 dark:text-green-400">
+                  <div className="px-4 py-2 bg-success/10 border-b border-success/20 flex items-center justify-between">
+                    <span className="text-sm text-success">
                       Code: <strong>{patientCode}</strong>
                     </span>
                     <Button variant="ghost" size="sm" onClick={handleResetCode} className="text-xs h-7">
@@ -190,9 +160,6 @@ const AIChatWidget = () => {
                       onClear={patientChat.clearMessages}
                       placeholder="Ask about your referral..."
                       quickActions={patientQuickActions}
-                      onFirstOpen={handleFirstOpen}
-                      speakResponses={speakResponses}
-                      onSpeakResponsesChange={setSpeakResponses}
                     />
                   </div>
                 </div>

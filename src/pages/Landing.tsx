@@ -13,6 +13,7 @@ import {
   Zap
 } from "lucide-react";
 import AmbulanceLoader from "@/components/AmbulanceLoader";
+import hospitalHeroBg from "@/assets/hospital-hero-bg.jpg";
 
 const Landing = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -85,32 +86,40 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 animate-fade-in">
-      {/* Hero Section */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent" />
-        <div className="container mx-auto px-4 py-16 md:py-24 relative">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
+    <div className="min-h-screen animate-fade-in">
+      {/* Hero Section with Hospital Background */}
+      <header className="relative overflow-hidden min-h-[600px] flex items-center">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${hospitalHeroBg})` }}
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        
+        <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm text-primary px-4 py-2 rounded-full mb-6 border border-primary/30">
               <Activity className="w-4 h-4" />
               <span className="text-sm font-medium">Hospital Referral Management</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
               Streamline Medical Referrals with{" "}
-              <span className="text-primary">MedRefer</span>
+              <span className="text-gradient">MedRefer</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl">
               A comprehensive hospital-to-hospital referral system that enables seamless patient transfers, 
               real-time tracking, and secure communication between healthcare providers.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="gap-2">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild size="lg" className="gap-2 shadow-lg">
                 <Link to="/login">
                   Get Started
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="backdrop-blur-sm bg-background/50">
                 <Link to="/login">
                   Sign In
                 </Link>
@@ -135,7 +144,7 @@ const Landing = () => {
             {features.map((feature, index) => (
               <Card 
                 key={index} 
-                className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/80 backdrop-blur-sm"
               >
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -151,7 +160,7 @@ const Landing = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -164,7 +173,7 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((item, index) => (
               <div key={index} className="text-center relative">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold flex items-center justify-center mx-auto mb-4 shadow-lg">
                   {item.step}
                 </div>
                 {index < steps.length - 1 && (
@@ -189,7 +198,7 @@ const Landing = () => {
               Join the network of healthcare providers using MedRefer to streamline patient referrals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="gap-2">
+              <Button asChild size="lg" className="gap-2 shadow-lg">
                 <Link to="/login">
                   Create Account
                   <ArrowRight className="w-4 h-4" />
@@ -206,7 +215,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
+      <footer className="py-8 border-t border-border bg-card">
         <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
           <p>© {new Date().getFullYear()} MedRefer. Hospital Referral Management System.</p>
         </div>
