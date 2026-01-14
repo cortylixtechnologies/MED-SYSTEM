@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_ips: {
+        Row: {
+          blocked_at: string
+          blocked_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          is_active: boolean
+          reason: string
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          is_active?: boolean
+          reason: string
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          is_active?: boolean
+          reason?: string
+        }
+        Relationships: []
+      }
       chat_conversations: {
         Row: {
           created_at: string
@@ -509,6 +539,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          email: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          email?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

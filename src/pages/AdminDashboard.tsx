@@ -22,8 +22,11 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Shield
 } from 'lucide-react';
+import SecurityLogViewer from '@/components/SecurityLogViewer';
+import IPBlockManager from '@/components/IPBlockManager';
 import { Navigate } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
 
@@ -384,10 +387,10 @@ const AdminDashboard = () => {
 
         {/* Main Tabs */}
         <Tabs defaultValue="referrals" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
             <TabsTrigger value="referrals" className="gap-2">
               <FileText className="w-4 h-4" />
-              All Referrals
+              Referrals
             </TabsTrigger>
             <TabsTrigger value="hospitals" className="gap-2">
               <Building2 className="w-4 h-4" />
@@ -396,6 +399,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="doctors" className="gap-2">
               <Users className="w-4 h-4" />
               Doctors
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2">
+              <Shield className="w-4 h-4" />
+              Security
             </TabsTrigger>
           </TabsList>
 
@@ -776,6 +783,18 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="lg:col-span-2">
+                <SecurityLogViewer />
+              </div>
+              <div className="lg:col-span-2">
+                <IPBlockManager />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

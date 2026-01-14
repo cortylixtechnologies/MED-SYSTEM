@@ -123,9 +123,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.unsubscribe();
   }, []);
 
+  const logSecurityEvent = async (eventType: string, email?: string, details?: Record<string, unknown>) => {
+    try {
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/security-logger`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            event_type: eventType,
+            email,
+            details,
+          }),
+        }
+      );
+    } catch (err) {
+      console.error('Failed to log security event:', err);
+    }
+  };
+
   const login = async (email: string, password: string): Promise<{ error: string | null; mfaRequired?: boolean; factorId?: string }> => {
+    // Log login attempt
+    await logSecurityEvent('login_attempt', email);
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      // Log failed login
+      await logSecurityEvent('login_failure', email, { reason: error.message });
       return { error: error.message };
     }
 
@@ -143,6 +170,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     }
+
+    // Log successful login
+    await logSecurityEvent('login_success', email);
 
     return { error: null };
   };
@@ -188,6 +218,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
+    if (currentUser) {
+      await logSecurityEvent('logout', currentUser.email);
+    }
     await supabase.auth.signOut();
     setCurrentUser(null);
   };
