@@ -28,8 +28,10 @@ import {
   Loader2,
   Paperclip,
   MessageCircle,
-  Printer
+  Printer,
+  Download
 } from 'lucide-react';
+import { generateReferralPDF } from '@/utils/pdfGenerator';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -290,13 +292,41 @@ const ReferralDetail = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => handlePrint()}
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print / Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                generateReferralPDF({
+                  id: referral.id,
+                  patientName: referral.patient.name,
+                  patientAge: referral.patient.age,
+                  patientContact: referral.patient.contact,
+                  patientMedicalId: referral.patient.medicalId,
+                  patientCode: referral.patientCode,
+                  fromHospitalName: referral.fromHospitalName,
+                  toHospitalName: referral.toHospitalName,
+                  urgency: referral.urgency,
+                  status: referral.status,
+                  medicalSummary: referral.medicalSummary,
+                  reason: referral.reasonForReferral,
+                  createdAt: typeof referral.createdAt === 'string' ? referral.createdAt : referral.createdAt.toISOString(),
+                  rejectionReason: referral.rejectionReason,
+                  assignedDoctorName: referral.assignedDoctorName,
+                }, referral.activityLog?.map(log => ({ ...log, created_at: log.timestamp.toISOString() })));
+                toast.success('PDF downloaded successfully');
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePrint()}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
